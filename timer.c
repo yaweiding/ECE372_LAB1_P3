@@ -7,7 +7,7 @@
 
 #include <xc.h>
 #include "timer.h"
-#define Fcy 80000000
+#define Fcy 8000000
 /*-------------------------------------------------------------------------------------------------------*/
 // use timer1 to count 10ms
 /*------------------------------------------------------------------------------------------------------*/
@@ -18,7 +18,7 @@ void initTimer1(){
     T1CONbits.TCKPS=3;// pre-scalar is equal to 256
     T1CONbits.TCS=0;// internal oscillator 
     IFS0bits.T1IF=0;// Put down flag
-    //IPC2bits.T1IP=3;// configure the interrupt priority 
+    IPC1bits.T1IP=3;// configure the interrupt priority 
     IEC0bits.T1IE=1; // Enable the interrupt
 }
 
@@ -41,7 +41,7 @@ void delayUs(unsigned int delay){
  //TODO: Create a delay for "delay" micro seconds using timer 2
 
     TMR2=0;// clear timer1
-    PR2= delay*Fcy-1;// delay 1Us 
+    PR2= delay*8-1;// delay 1Us 
     IFS0bits.T2IF=0;// Put flag down
     T2CONbits.ON=1;// enable timer2
     while(IFS0bits.T2IF==0);
@@ -52,10 +52,22 @@ void delayMs(unsigned int delay){
  //TODO: Create a delay for "delay" micro seconds using timer 2
 
     TMR2=0;// clear timer1
-    PR2= delay*Fcy-1;// delay 1Us 
+    PR2= delay*8000-1;// delay 1Ms 
     IFS0bits.T2IF=0;// Put flag down
     T2CONbits.ON=1;// enable timer2
     while(IFS0bits.T2IF==0);
     T2CONbits.ON=0;//turn off timer2
    
+}
+
+void getTimeString(int timer, char *string )
+{   //char *string;
+    int FF;
+    int SS;
+    int MM;
+    FF=timer%100;// mod(100) is 0.01s
+    SS=(timer/100)%60; // mod(60) is 1s
+    MM=((timer/100) - SS) / 60; // 
+    // sprintf write the formate data to string
+    sprintf(string,"%02d:%02d:%02d",MM,SS,FF);
 }

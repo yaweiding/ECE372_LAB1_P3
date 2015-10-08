@@ -7,8 +7,8 @@
 
 #ifndef SWITCH_H
 #define	SWITCH_H
-#define SW1 PORTGbits.RG13
-#define SW2 PORTDbits.RD6
+#define stopButton PORTGbits.RG13
+#define resetButton PORTDbits.RD6
 
 void initSW1();
 void initSW2();

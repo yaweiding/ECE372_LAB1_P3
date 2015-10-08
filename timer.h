@@ -11,6 +11,7 @@ void delayMs(unsigned int delay);
 void delayUs(unsigned int delay);
 void initTimer2();
 void initTimer1();
+void getTimeString(int timer, char *string );
 
 #endif	/* INITTIMER_H */
 

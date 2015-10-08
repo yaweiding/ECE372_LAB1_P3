@@ -11,20 +11,23 @@
 #include "lcd.h"
 #include "timer.h"
 
-
 #define LCD_RS  LATDbits.LATD5
 #define LCD_E   LATDbits.LATD3
+#define LCD_RW  LATDbits.LATD11
 
-#define TRIS_D7  TRISEbits.TRISE7
-#define TRIS_D6  TRISEbits.TRISE5
+#define TRIS_D7  TRISEbits.TRISE7 //
+#define TRIS_D6  TRISEbits.TRISE5 //
 #define TRIS_D5  TRISEbits.TRISE3
 #define TRIS_D4  TRISEbits.TRISE1
-#define TRIS_D3  TRISDbits.TRISD6
-#define TRIS_D2  TRISDbits.TRISD12
-#define TRIS_D1  TRISFbits.TRISF1
-#define TRIS_D0  TRISGbits.TRISG0
+//#define TRIS_D3  TRISDbits.TRISD6
+//#define TRIS_D2  TRISDbits.TRISD12
+//#define TRIS_D1  TRISFbits.TRISF1
+//#define TRIS_D0  TRISGbits.TRISG0
 #define TRIS_RS  TRISDbits.TRISD5
-#define TRIS_E   TRISDbits.TRISD3
+#define TRIS_E   TRISDbits.TRISD3 //
+
+#define TRIS_RW  TRISDbits.TRISD11
+
 #define LOWER 0
 #define UPPER 1
 #define LCD_WRITE_DATA   1
@@ -83,18 +86,25 @@ void printCharLCD(char c) {
  */
 void initLCD(void) {
     // Setup D, RS, and E to be outputs (0).
-    TRIS_D0 = 0;
-    TRIS_D1 = 0;
-    TRIS_D2 = 0;
-    TRIS_D3 = 0;
+//    TRIS_D0 = 0;
+//    TRIS_D1 = 0;
+//    TRIS_D2 = 0;
+//    TRIS_D3 = 0;
     TRIS_D4 = 0;
     TRIS_D5 = 0;
     TRIS_D6 = 0;
     TRIS_D7 = 0;
     TRIS_RS = 0;
+    TRIS_RW = 0;
     TRIS_E = 0;
     LCD_RS = 0;
+    LCD_RW = 0;
     LCD_E = 0;
+    
+    ANSELDbits.ANSD3 = 1;
+    ANSELEbits.ANSE7 = 1;
+    ANSELEbits.ANSE5 = 1;
+
     // Initilization sequence utilizes specific LCD commands before the general configuration
 
     //wait 15 ms
@@ -103,19 +113,23 @@ void initLCD(void) {
 
     // WriteLCD function. Additionally, the specific sequence and timing is very important.
 
-
+    int i = 0;
     // Enable 4-bit interface
-     delayUs(15000);// wait 15ms
+     //delayUs(16000);// wait 15ms
+     for (  i =0; i < 32; i++){
+         delayUs(500);
+     }
+     
     
-    writeFourBits(0x03, LCD_CONTROL_DATA, 4100, LOWER);// DB5=1, DB4=1;
+    writeFourBits(0x03, LCD_CONTROL_DATA, 4200, LOWER);// DB5=1, DB4=1;
 
-    writeFourBits(0x03, LCD_CONTROL_DATA, 100, LOWER); // DB5=1 DB4=0
+    writeFourBits(0x03, LCD_CONTROL_DATA, 100, LOWER); // DB5=1 DB4=1
 
-    writeLCD(0x32, LCD_CONTROL_DATA, 40);// no delay time put the last tow commands together 
+    writeLCD(0x32, LCD_CONTROL_DATA, 45);// no delay time put the last tow commands together 
     
             
     // Function Set (specifies data width, lines, and font.
-    writeLCD(0x28, LCD_CONTROL_DATA, 40); //    4bits 2lines RE=0
+    writeLCD(0x28, LCD_CONTROL_DATA, 45); //    4bits 2lines RE=0
 
 
     // 4-bit mode initialization is complete. We can now configure the various LCD
@@ -123,17 +137,17 @@ void initLCD(void) {
 
     // TODO: Display On/Off Control
     // Turn Display (D) Off 
-    writeLCD(0x08, LCD_CONTROL_DATA, 40); // delay time display off cursor off no blink 
+    writeLCD(0x08, LCD_CONTROL_DATA, 45); // delay time display off cursor off no blink 
     // TODO: Clear Display (The delay is not specified in the data sheet at this point. You really need to have the clear display delay here.
 
-    writeLCD(0x01, LCD_CONTROL_DATA, 1000); // delay time 1MS
+    writeLCD(0x01, LCD_CONTROL_DATA, 1610); // delay time 1MS
 
     // TODO: Entry Mode Set
     // Set Increment Display, No Shift (i.e. cursor move)
-    writeLCD(0x06, LCD_CONTROL_DATA, 40); // increment  
+    writeLCD(0x06, LCD_CONTROL_DATA, 45); // increment  
     // TODO: Display On/Off Control
     // Turn Display (D) On, Cursor (C) Off, and Blink(B) Off
-    writeLCD(0x0C, LCD_CONTROL_DATA, 40); // 
+    writeLCD(0x0C, LCD_CONTROL_DATA, 45); // 
 }
 
 /*
@@ -158,7 +172,7 @@ void printStringLCD(const char* s) {
 void clearLCD() {
     //LCD_E=0;
     // LCD_RS=0;
-    writeLCD(0x01, LCD_CONTROL_DATA, 1000); //82US -1.64MS
+    writeLCD(0x01, LCD_CONTROL_DATA, 1610); //82US -1.64MS
     moveCursorLCD(0, 0);
 
 }
@@ -172,12 +186,12 @@ void moveCursorLCD(unsigned char x, unsigned char y) {
     //writeLCD(0x02, LCD_CONTROL_DATA, 40); //return home command0x02 delay40us
     
      
-     if(x == 0){
-         writeLCD(0x80 + y, LCD_CONTROL_DATA, 40);
+    if(x == 0){
+        writeLCD(0x80 + y, LCD_CONTROL_DATA, 40);
          
-     }
-    if(x == 1){
-        writeLCD(0x80 + 0x40 + y, LCD_CONTROL_DATA, 40);
+    }
+    else{
+        writeLCD(0xC0 + y, LCD_CONTROL_DATA, 40);
     }
     
     
